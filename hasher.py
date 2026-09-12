@@ -47,6 +47,27 @@ def get_file_metadata(file_path: str) -> dict:
         "filehash": compute_file_hash(file_path),
     }
 
+def scan_folder_for_duplicates(folder_path):
+    """
+    Scans all files in a folder (including subfolders) and groups
+    files that share the same hash — i.e., duplicates of each other.
+    Returns a dictionary: {hash: [list of file paths]}
+    """
+    hash_map = {}
+
+    for root, dirs, files in os.walk(folder_path):
+        for file in files:
+            full_path = os.path.join(root, file)
+            try:
+                file_hash = compute_file_hash(full_path)
+                hash_map.setdefault(file_hash, []).append(full_path)
+            except (PermissionError, OSError):
+                continue  # skip files we can't read
+
+    # Keep only hashes that appear more than once (actual duplicates)
+    duplicates = {h: paths for h, paths in hash_map.items() if len(paths) > 1}
+    return duplicates
+
 if __name__ == "__main__":
     import sys
     if len(sys.argv) != 2:
