@@ -104,6 +104,21 @@ def scan_folder():
 
     print(f"Estimated wasted storage: {wasted_space} bytes\n")
 
+    save = input("Save this report to a file? (y/n): ").strip().lower()
+    if save == "y":
+        report_filename = "duplicate_report.txt"
+        with open(report_filename, "w") as f:
+            f.write(f"DDAS Duplicate Scan Report\n")
+            f.write(f"Folder scanned: {folder_path}\n")
+            f.write(f"Total duplicate sets found: {len(duplicates)}\n\n")
+            for file_hash, paths in duplicates.items():
+                f.write(f"Duplicate group (hash: {file_hash[:12]}...):\n")
+                for p in paths:
+                    f.write(f"  - {p}\n")
+                f.write("\n")
+            f.write(f"Estimated wasted storage: {wasted_space} bytes\n")
+        print(f"[SAVED] Report saved to '{report_filename}'\n")
+
 
 def main():
     create_table()
