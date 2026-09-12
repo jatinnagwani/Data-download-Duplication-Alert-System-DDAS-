@@ -8,7 +8,7 @@ duplicates, and reports results.
 
 import os
 from hasher import compute_file_hash, get_file_metadata, scan_folder_for_duplicates
-from database import create_table, insert_record, check_duplicate, get_all_records
+from database import create_table, insert_record, check_duplicate, get_all_records, get_records_by_user
 
 
 def simulate_download():
@@ -62,12 +62,19 @@ def simulate_download():
 
 
 def view_records():
-    records = get_all_records()
+    filter_choice = input("View (1) All records or (2) Filter by username? Enter 1 or 2: ").strip()
+
+    if filter_choice == "2":
+        username = input("Enter username to filter by: ").strip()
+        records = get_records_by_user(username)
+    else:
+        records = get_all_records()
+
     if not records:
-        print("\nNo records found yet.\n")
+        print("\nNo records found.\n")
         return
 
-    print("\n=== All Download Records ===")
+    print("\n=== Download Records ===")
     print(f"{'ID':<4}{'Filename':<20}{'User':<12}{'Timestamp':<22}{'Location'}")
     print("-" * 80)
     for r in records:

@@ -69,3 +69,16 @@ def get_all_records():
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+
+def get_records_by_user(username):
+    """
+    Returns all records for a specific username.
+    Used when the user wants to filter records instead of viewing all.
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM records WHERE username = ?", (username,))
+    rows = cursor.fetchall()
+    conn.close()
+    return rows
