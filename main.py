@@ -8,7 +8,7 @@ duplicates, and reports results.
 
 import os
 from hasher import compute_file_hash, get_file_metadata, scan_folder_for_duplicates
-from database import create_table, insert_record, check_duplicate, get_all_records, get_records_by_user
+from database import create_table, insert_record, check_duplicate, get_all_records, get_records_by_user, get_statistics
 
 
 def simulate_download():
@@ -82,6 +82,20 @@ def view_records():
         print(f"{rec_id:<4}{filename:<20}{username:<12}{timestamp:<22}{location}")
     print(f"\nTotal records: {len(records)}\n")
 
+def show_statistics():
+    stats = get_statistics()
+
+    if stats["total_records"] == 0:
+        print("\nNo data yet to show statistics.\n")
+        return
+
+    print("\n=== DDAS Statistics ===")
+    print(f"Total files tracked   : {stats['total_records']}")
+    print(f"Total storage used    : {stats['total_size']} bytes")
+    if stats["most_active_user"]:
+        print(f"Most active user      : {stats['most_active_user']} ({stats['most_active_count']} downloads)")
+    print()
+
 def scan_folder():
     folder_path = input("Enter folder path to scan: ").strip()
 
@@ -135,7 +149,8 @@ def main():
         print("1. Simulate a download")
         print("2. View all records")
         print("3. Scan a folder for duplicates")
-        print("4. Exit")
+        print("4. View statistics")
+        print("5. Exit")
         choice = input("Enter your choice: ").strip()
 
         if choice == "1":
@@ -145,6 +160,8 @@ def main():
         elif choice == "3":
             scan_folder()
         elif choice == "4":
+            show_statistics()
+        elif choice == "5":
             print("Exiting DDAS. Goodbye!")
             break
         else:

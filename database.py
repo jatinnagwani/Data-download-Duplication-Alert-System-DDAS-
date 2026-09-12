@@ -82,3 +82,35 @@ def get_records_by_user(username):
     rows = cursor.fetchall()
     conn.close()
     return rows
+
+
+def get_statistics():
+    """
+    Returns summary statistics: total records, total storage used,
+    and the most active user (who has the most downloads recorded).
+    """
+    conn = sqlite3.connect(DB_NAME)
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) FROM records")
+    total_records = cursor.fetchone()[0]
+
+    cursor.execute("SELECT SUM(filesize) FROM records")
+    total_size = cursor.fetchone()[0] or 0
+
+    cursor.execute("""
+        SELECT username, COUNT(*) as count
+        FROM records
+        GROUP BY username
+        ORDER BY count DESC
+        LIMIT 1
+    """)
+    most_active = cursor.fetchone()
+
+    conn.close()
+    return {
+        "total_records": total_records,
+        "total_size": total_size,
+        "most_active_user": most_active[0] if most_active else None,
+        "most_active_count": most_active[1] if most_active else 0,
+    }
