@@ -11,6 +11,7 @@ from hasher import compute_file_hash, get_file_metadata, scan_folder_for_duplica
 from database import create_table, insert_record, check_duplicate, get_all_records, get_records_by_user, get_statistics
 from rich.console import Console
 from rich.table import Table
+from rich.panel import Panel
 
 console = Console()
 
@@ -87,7 +88,7 @@ def view_records():
         rec_id, filename, filehash, filesize, username, timestamp, location = r
         table.add_row(str(rec_id), filename, username, timestamp, location)
 
-    console.print(table)
+    console.print(Panel(table, title="[bold]Records[/bold]", border_style="cyan"))
     console.print(f"\n[bold]Total records:[/bold] {len(records)}\n")
 
 
@@ -107,7 +108,7 @@ def show_statistics():
     if stats["most_active_user"]:
         table.add_row("Most active user", f"{stats['most_active_user']} ({stats['most_active_count']} downloads)")
 
-    console.print(table)
+    console.print(Panel(table, title="[bold]Summary[/bold]", border_style="cyan"))
     console.print()
 
 
@@ -136,7 +137,7 @@ def scan_folder():
         table.add_column("File path", style="white")
         for p in paths:
             table.add_row(p)
-        console.print(table)
+        console.print(Panel(table, border_style="red"))
         wasted_space += os.path.getsize(paths[0]) * (len(paths) - 1)
 
     console.print(f"\n[bold]Estimated wasted storage:[/bold] {wasted_space} bytes\n")
