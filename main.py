@@ -15,11 +15,19 @@ def simulate_download():
     username = input("Enter your username: ").strip()
     file_path = input("Enter the file path you want to download: ").strip()
 
+    if not username:
+        print("\n[ERROR] Username cannot be empty.\n")
+        return
+
     if not os.path.isfile(file_path):
         print(f"\n[ERROR] '{file_path}' is not a valid file. Try again.\n")
         return
 
-    metadata = get_file_metadata(file_path)
+    try:
+        metadata = get_file_metadata(file_path)
+    except ValueError as e:
+        print(f"\n[ERROR] {e}\n")
+        return
     filehash = metadata["filehash"]
 
     existing = check_duplicate(filehash)
