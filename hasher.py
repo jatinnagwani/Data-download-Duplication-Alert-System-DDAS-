@@ -1,3 +1,28 @@
+"""
+hasher.py
+---------
+Responsible for generating a unique 'fingerprint' (hash) for any file.
+
+Why hashing instead of comparing filenames?
+Two files can have completely different names but identical content
+(e.g., "report.pdf" and "report_copy.pdf"). Comparing names would miss
+this duplicate. Hashing looks at the actual content, so it catches
+duplicates regardless of what the file is called.
+
+Why SHA-256 and not MD5?
+MD5 is faster but has known collision weaknesses (two different files
+can, in rare cases, produce the same MD5 hash). SHA-256 is much more
+reliable for this purpose and is available in Python's built-in
+hashlib module, so no extra installation is needed.
+
+Why read in chunks instead of the whole file at once?
+- If someone tries to hash a 2GB video file, loading it all into RAM
+  at once could crash the program on low-memory systems.
+- Reading in small chunks (4096 bytes at a time) keeps memory usage
+  constant no matter how big the file is.
+"""
+
+
 import hashlib
 import os
 
