@@ -56,6 +56,7 @@ def scan_folder_for_duplicates(folder_path):
     hash_map = {}
 
     for root, dirs, files in os.walk(folder_path):
+        dirs[:] = [d for d in dirs if not d.startswith(".")] # For skipping hidden/system folders like .git
         for file in files:
             full_path = os.path.join(root, file)
             try:
