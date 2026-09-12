@@ -18,6 +18,12 @@ def simulate_download():
     if not username:
         print("\n[ERROR] Username cannot be empty.\n")
         return
+    
+
+    if not file_path:
+        print("\n[ERROR] File path cannot be empty.\n")
+        return
+
 
     if not os.path.isfile(file_path):
         print(f"\n[ERROR] '{file_path}' is not a valid file. Try again.\n")
