@@ -22,18 +22,6 @@ In shared environments — institutes, research teams, government data repositor
 
 ---
 
-## 🗂️ Project Structure
-
-ddas/
-├── hasher.py # File hashing + folder duplicate scanning
-├── database.py # SQLite storage, filtering, statistics
-├── main.py # Terminal menu — ties everything together
-├── requirements.txt # External dependency (rich)
-└── README.md
-
-
----
-
 ## ⚙️ How It Works
 
 1. User "simulates" a download by providing a file path
