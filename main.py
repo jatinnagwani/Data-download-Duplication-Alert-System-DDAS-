@@ -67,7 +67,7 @@ def view_records():
     for r in records:
         rec_id, filename, filehash, filesize, username, timestamp, location = r
         print(f"{rec_id:<4}{filename:<20}{username:<12}{timestamp:<22}{location}")
-    print()
+    print(f"\nTotal records: {len(records)}\n")
 
 
 def main():
