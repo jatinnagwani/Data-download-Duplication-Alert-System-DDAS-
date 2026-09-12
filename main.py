@@ -9,6 +9,10 @@ duplicates, and reports results.
 import os
 from hasher import compute_file_hash, get_file_metadata, scan_folder_for_duplicates
 from database import create_table, insert_record, check_duplicate, get_all_records, get_records_by_user, get_statistics
+from rich.console import Console
+from rich.table import Table
+
+console = Console()
 
 
 def simulate_download():
@@ -16,23 +20,21 @@ def simulate_download():
     file_path = input("Enter the file path you want to download: ").strip()
 
     if not username:
-        print("\n[ERROR] Username cannot be empty.\n")
+        console.print("\n[bold yellow]\\[ERROR][/bold yellow] Username cannot be empty.\n")
         return
-    
 
     if not file_path:
-        print("\n[ERROR] File path cannot be empty.\n")
+        console.print("\n[bold yellow]\\[ERROR][/bold yellow] File path cannot be empty.\n")
         return
 
-
     if not os.path.isfile(file_path):
-        print(f"\n[ERROR] '{file_path}' is not a valid file. Try again.\n")
+        console.print(f"\n[bold yellow]\\[ERROR][/bold yellow] '{file_path}' is not a valid file. Try again.\n")
         return
 
     try:
         metadata = get_file_metadata(file_path)
     except ValueError as e:
-        print(f"\n[ERROR] {e}\n")
+        console.print(f"\n[bold yellow]\\[ERROR][/bold yellow] {e}\n")
         return
     filehash = metadata["filehash"]
 
@@ -40,13 +42,13 @@ def simulate_download():
 
     if existing:
         existing_filename, existing_user, existing_time, existing_location = existing
-        print("\n[DUPLICATE ALERT]")
-        print(f"This file has already been downloaded before!")
-        print(f"  Original filename : {existing_filename}")
-        print(f"  Downloaded by     : {existing_user}")
-        print(f"  Downloaded on     : {existing_time}")
-        print(f"  Location          : {existing_location}")
-        print("No new download needed.\n")
+        console.print("\n[bold red]\\[DUPLICATE ALERT][/bold red]")
+        console.print("This file has already been downloaded before!")
+        console.print(f"  Original filename : {existing_filename}")
+        console.print(f"  Downloaded by     : {existing_user}")
+        console.print(f"  Downloaded on     : {existing_time}")
+        console.print(f"  Location          : {existing_location}")
+        console.print("No new download needed.\n")
     else:
         insert_record(
             filename=metadata["filename"],
@@ -55,10 +57,10 @@ def simulate_download():
             username=username,
             location=file_path,
         )
-        print(f"\n[OK] New file recorded successfully.")
-        print(f"  Filename : {metadata['filename']}")
-        print(f"  Size     : {metadata['filesize']} bytes")
-        print(f"  Hash     : {filehash}\n")
+        console.print(f"\n[bold green]\\[OK][/bold green] New file recorded successfully.")
+        console.print(f"  Filename : {metadata['filename']}")
+        console.print(f"  Size     : {metadata['filesize']} bytes")
+        console.print(f"  Hash     : {filehash}\n")
 
 
 def view_records():
@@ -71,59 +73,73 @@ def view_records():
         records = get_all_records()
 
     if not records:
-        print("\nNo records found.\n")
+        console.print("\n[yellow]No records found.[/yellow]\n")
         return
 
-    print("\n=== Download Records ===")
-    print(f"{'ID':<4}{'Filename':<20}{'User':<12}{'Timestamp':<22}{'Location'}")
-    print("-" * 80)
+    table = Table(title="Download Records")
+    table.add_column("ID", style="cyan")
+    table.add_column("Filename", style="white")
+    table.add_column("User", style="magenta")
+    table.add_column("Timestamp", style="white")
+    table.add_column("Location", style="white")
+
     for r in records:
         rec_id, filename, filehash, filesize, username, timestamp, location = r
-        print(f"{rec_id:<4}{filename:<20}{username:<12}{timestamp:<22}{location}")
-    print(f"\nTotal records: {len(records)}\n")
+        table.add_row(str(rec_id), filename, username, timestamp, location)
+
+    console.print(table)
+    console.print(f"\n[bold]Total records:[/bold] {len(records)}\n")
+
 
 def show_statistics():
     stats = get_statistics()
 
     if stats["total_records"] == 0:
-        print("\nNo data yet to show statistics.\n")
+        console.print("\n[yellow]No data yet to show statistics.[/yellow]\n")
         return
 
-    print("\n=== DDAS Statistics ===")
-    print(f"Total files tracked   : {stats['total_records']}")
-    print(f"Total storage used    : {stats['total_size']} bytes")
+    table = Table(title="DDAS Statistics")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="white")
+
+    table.add_row("Total files tracked", str(stats["total_records"]))
+    table.add_row("Total storage used", f"{stats['total_size']} bytes")
     if stats["most_active_user"]:
-        print(f"Most active user      : {stats['most_active_user']} ({stats['most_active_count']} downloads)")
-    print()
+        table.add_row("Most active user", f"{stats['most_active_user']} ({stats['most_active_count']} downloads)")
+
+    console.print(table)
+    console.print()
+
 
 def scan_folder():
     folder_path = input("Enter folder path to scan: ").strip()
 
     if not folder_path:
-        print("\n[ERROR] Folder path cannot be empty.\n")
+        console.print("\n[bold yellow]\\[ERROR][/bold yellow] Folder path cannot be empty.\n")
         return
 
     if not os.path.isdir(folder_path):
-        print(f"\n[ERROR] '{folder_path}' is not a valid folder.\n")
+        console.print(f"\n[bold yellow]\\[ERROR][/bold yellow] '{folder_path}' is not a valid folder.\n")
         return
 
     duplicates = scan_folder_for_duplicates(folder_path)
 
     if not duplicates:
-        print("\n[OK] No duplicates found in this folder.\n")
+        console.print("\n[bold green]\\[OK][/bold green] No duplicates found in this folder.\n")
         return
 
-    print(f"\n[FOUND] {len(duplicates)} set(s) of duplicate files:\n")
+    console.print(f"\n[bold red]\\[FOUND][/bold red] {len(duplicates)} set(s) of duplicate files:\n")
+
     wasted_space = 0
     for file_hash, paths in duplicates.items():
-        print(f"Duplicate group (hash: {file_hash[:12]}...):")
+        table = Table(title=f"Duplicate group (hash: {file_hash[:12]}...)")
+        table.add_column("File path", style="white")
         for p in paths:
-            print(f"  - {p}")
-        # All extra copies beyond the first one are "wasted" space
+            table.add_row(p)
+        console.print(table)
         wasted_space += os.path.getsize(paths[0]) * (len(paths) - 1)
-        print()
 
-    print(f"Estimated wasted storage: {wasted_space} bytes\n")
+    console.print(f"\n[bold]Estimated wasted storage:[/bold] {wasted_space} bytes\n")
 
     save = input("Save this report to a file? (y/n): ").strip().lower()
     if save == "y":
@@ -138,19 +154,19 @@ def scan_folder():
                     f.write(f"  - {p}\n")
                 f.write("\n")
             f.write(f"Estimated wasted storage: {wasted_space} bytes\n")
-        print(f"[SAVED] Report saved to '{report_filename}'\n")
+        console.print(f"[bold green]\\[SAVED][/bold green] Report saved to '{report_filename}'\n")
 
 
 def main():
     create_table()
 
     while True:
-        print("=== DDAS - Data Download Duplication Alert System ===")
-        print("1. Simulate a download")
-        print("2. View all records")
-        print("3. Scan a folder for duplicates")
-        print("4. View statistics")
-        print("5. Exit")
+        console.print("\n[bold cyan]=== DDAS - Data Download Duplication Alert System ===[/bold cyan]")
+        console.print("1. Simulate a download")
+        console.print("2. View all records")
+        console.print("3. Scan a folder for duplicates")
+        console.print("4. View statistics")
+        console.print("5. Exit")
         choice = input("Enter your choice: ").strip()
 
         if choice == "1":
@@ -162,10 +178,10 @@ def main():
         elif choice == "4":
             show_statistics()
         elif choice == "5":
-            print("Exiting DDAS. Goodbye!")
+            console.print("[bold magenta]Exiting DDAS. Goodbye![/bold magenta]")
             break
         else:
-            print("\n[ERROR] Invalid choice, try again.\n")
+            console.print("\n[bold yellow]\\[ERROR][/bold yellow] Invalid choice, try again.\n")
 
 
 if __name__ == "__main__":
