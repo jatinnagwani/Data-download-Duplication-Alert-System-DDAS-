@@ -7,7 +7,7 @@ duplicates, and reports results.
 """
 
 import os
-from hasher import compute_file_hash, get_file_metadata
+from hasher import compute_file_hash, get_file_metadata, scan_folder_for_duplicates
 from database import create_table, insert_record, check_duplicate, get_all_records
 
 
@@ -75,6 +75,35 @@ def view_records():
         print(f"{rec_id:<4}{filename:<20}{username:<12}{timestamp:<22}{location}")
     print(f"\nTotal records: {len(records)}\n")
 
+def scan_folder():
+    folder_path = input("Enter folder path to scan: ").strip()
+
+    if not folder_path:
+        print("\n[ERROR] Folder path cannot be empty.\n")
+        return
+
+    if not os.path.isdir(folder_path):
+        print(f"\n[ERROR] '{folder_path}' is not a valid folder.\n")
+        return
+
+    duplicates = scan_folder_for_duplicates(folder_path)
+
+    if not duplicates:
+        print("\n[OK] No duplicates found in this folder.\n")
+        return
+
+    print(f"\n[FOUND] {len(duplicates)} set(s) of duplicate files:\n")
+    wasted_space = 0
+    for file_hash, paths in duplicates.items():
+        print(f"Duplicate group (hash: {file_hash[:12]}...):")
+        for p in paths:
+            print(f"  - {p}")
+        # All extra copies beyond the first one are "wasted" space
+        wasted_space += os.path.getsize(paths[0]) * (len(paths) - 1)
+        print()
+
+    print(f"Estimated wasted storage: {wasted_space} bytes\n")
+
 
 def main():
     create_table()
@@ -83,7 +112,8 @@ def main():
         print("=== DDAS - Data Download Duplication Alert System ===")
         print("1. Simulate a download")
         print("2. View all records")
-        print("3. Exit")
+        print("3. Scan a folder for duplicates")
+        print("4. Exit")
         choice = input("Enter your choice: ").strip()
 
         if choice == "1":
@@ -91,6 +121,8 @@ def main():
         elif choice == "2":
             view_records()
         elif choice == "3":
+            scan_folder()
+        elif choice == "4":
             print("Exiting DDAS. Goodbye!")
             break
         else:
